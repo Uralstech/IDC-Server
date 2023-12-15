@@ -1,0 +1,9 @@
+transformers
+optimum
+accelerate
+fastapi
+uvicorn
+sse-starlette
+pydantic
+firebase-admin
+intel_extension_for_pytorch
