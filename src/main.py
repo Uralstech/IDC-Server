@@ -42,7 +42,7 @@ prepared_model = ipex.quantization.prepare(model, qconfig)
 model = ipex.quantization.convert(prepared_model)
 model = ipex.optimize(model)
 
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.bfloat16, device_map="auto")
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.int8, device_map="auto")
 
 @app.post("/api/chat", response_model=ChatCompletionResult)
 async def ask(request: ChatCompletionsRequest):
