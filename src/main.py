@@ -1,6 +1,7 @@
 # IDC AI Server
+# IDC AI Server
 # Copyright 2023 URAV ADVANCED LEARNING SYSTEMS PRIVATE LIMITED
-# 
+#
 # This product includes software developed at
 # URAV ADVANCED LEARNING SYSTEMS PRIVATE LIMITED (https://uralstech.in/)
 # by Udayshankar Ravikumar.
@@ -35,6 +36,10 @@ model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v0.6"
 model = AutoModelForCausalLM.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+qconfig = ipex.quantization.default_dynamic_qconfig
+prepared_model = ipex.quantization.prepare(model, qconfig)
+
+model = ipex.quantization.convert(prepared_model)
 model = ipex.optimize(model)
 
 pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.bfloat16, device_map="auto")

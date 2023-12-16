@@ -12,7 +12,7 @@
     * Python-powered
     * Running on Intel Developer Cloud
     * Using HuggingFace Transformers w/ acceleration from Intel Extensions for Pytorch (IPEX), utilizing OneAPI
-    * TinyLLama as the model
+    * TinyLLama as the model - Quantized and optimized by IPEX
     * FastAPI for simple REST API
     * Authentication using Firebase Admin SDK
 * App:
