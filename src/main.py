@@ -1,14 +1,12 @@
 # IDC AI Server
-# IDC AI Server
 # Copyright 2023 URAV ADVANCED LEARNING SYSTEMS PRIVATE LIMITED
 #
 # This product includes software developed at
 # URAV ADVANCED LEARNING SYSTEMS PRIVATE LIMITED (https://uralstech.in/)
 # by Udayshankar Ravikumar.
 
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import intel_extension_for_pytorch as ipex
-import torch
 
 from typing import List, Dict
 from pydantic import BaseModel
@@ -32,9 +30,9 @@ class ChatCompletionResult(BaseModel):
 app: FastAPI = FastAPI(title="IDC AI Server", version="1.0.0")
 app.add_middleware(UMiddleware, firebase_app=initialize_firebase_app())
 
-model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v0.6"
-model = AutoModelForCausalLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model_name: str = "stabilityai/stablelm-zephyr-3b"
+model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
 qconfig = ipex.quantization.default_dynamic_qconfig
 prepared_model = ipex.quantization.prepare(model, qconfig)
@@ -42,20 +40,35 @@ prepared_model = ipex.quantization.prepare(model, qconfig)
 model = ipex.quantization.convert(prepared_model)
 model = ipex.optimize(model)
 
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.int8, device_map="auto")
-
 @app.post("/api/chat", response_model=ChatCompletionResult)
 async def ask(request: ChatCompletionsRequest):
-    prompt = pipe.tokenizer.apply_chat_template(request.messages, tokenize=False, add_generation_prompt=True)
-    outputs = pipe(prompt, max_new_tokens=64, do_sample=True, temperature=0.7, top_k=50, top_p=0.95)
+    request.messages.append({"role":"system","content":"Always give short, concise replies."})
 
-    full_reply: str = outputs[0]["generated_text"]
-    index: int = full_reply.find("<|assistant|>")
+    prompt = tokenizer.apply_chat_template(request.messages, add_generation_prompt=True, return_tensors='pt')
+    tokens = model.generate(
+        prompt.to(model.device),
+        max_new_tokens=256,
+        temperature=0.3,
+        do_sample=True
+    )
 
-    if index == -1:
-        return full_reply
-    
-    return { "reply" : full_reply[index + 14:] }
+    decoded = tokenizer.decode(tokens[0], skip_special_tokens=False)
+
+    prev_index = -2
+    while True:
+        index = decoded.find("<|assistant|>\n")
+        index = 0 if index == -1 else index + 14
+
+        if index == 0 or index == prev_index:
+            break
+        prev_index = index
+
+    end = decoded.find("<|endoftext|>", index)
+    if end == -1:
+        end = len(decoded)
+
+    print(f"{index} || {end} || {decoded}")
+    return { "reply" : decoded[index:end] }
 
 if __name__ == "__main__":
     run(app, host="0.0.0.0", port=8080)
