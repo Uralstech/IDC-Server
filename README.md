@@ -8,6 +8,7 @@
 ***kAIoska***: AI Talking Multilingual No-Touch Avatar-Based Information Kiosk Customer Service agents
 
 ### Benchmark:
+![Test](.github/images/Benchmark.png)
 * IPEX Optimized average inference time (sec): 1.2261635462443035
 * Not optimized average inference time (sec): 1.812053879102071
   
