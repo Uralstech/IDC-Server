@@ -6,6 +6,10 @@
 
 ### A Brief of the Prototype:
 ***kAIoska***: AI Talking Multilingual No-Touch Avatar-Based Information Kiosk Customer Service agents
+
+BENCHMARK:
+w/ IPEX: avr (secs) 1.9325974384943645
+wo/ IPEX: avr (secs) 1.7875546216964722
   
 ### Tech Stack:
 * Server:
